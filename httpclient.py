@@ -84,13 +84,32 @@ class HTTPClient(object):
         return str(buffer)
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        #code = 500
+        #body = ""
+        sockvals = self.get_host_port(url)
+        sock = self.connect(sockvals)
+        sock.sendall('GET %s HTTP/1.0\r\n' % sockvals[0].geturl())
+        data = self.recvall(sock)
+        code = self.get_code(data)
+        body = self.get_body(data)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        #code = 500
+        #body = ""
+        sockvals = self.get_host_port(url)
+        sock = self.connect(sockvals)
+        
+        postsock = 'POST %s HTTP/1.0\r\n' % sockvals[0].geturl()
+        if args != None:
+            postdata = urllib.urlencode(args)
+            postsock += ('Content-Length: ' + str(len(postdata)) + '\n\n' + [postdata])
+        else: 
+            postsock += '\n'
+            
+        data = self.recvall(sock)
+        code = self.get_code(data)
+        body = self.get_body(data)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
