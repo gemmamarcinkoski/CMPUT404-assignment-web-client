@@ -28,7 +28,7 @@ import urlparse
 def help():
     print "httpclient.py [GET/POST] [URL]\n"
 
-class HTTPResponse(object):
+class HTTPRequest(object):
     def __init__(self, code=200, body=""):
         self.code = code
         self.body = body
@@ -43,7 +43,7 @@ class HTTPClient(object):
             host, port = parsed,netloc, 80    
         return[parsed, host, port]
 
-    def connect(self,sockvals, timeout):
+    def connect(self,sockvals, timeout=10):
         #connectig socket
         sock = socket.create_connection((sockvals[1], sockvals[2]), timeout)
         return sock
@@ -88,11 +88,11 @@ class HTTPClient(object):
         #body = ""
         sockvals = self.get_host_port(url)
         sock = self.connect(sockvals)
-        sock.sendall('GET %s HTTP/1.0\r\n' % sockvals[0].geturl())
+        sock.sendall('GET %s HTTP/1.1\r\n' % sockvals[0].geturl())
         data = self.recvall(sock)
         code = self.get_code(data)
         body = self.get_body(data)
-        return HTTPResponse(code, body)
+        return HTTPRequest(code, body)
 
     def POST(self, url, args=None):
         #code = 500
@@ -100,7 +100,7 @@ class HTTPClient(object):
         sockvals = self.get_host_port(url)
         sock = self.connect(sockvals)
         
-        postsock = 'POST %s HTTP/1.0\r\n' % sockvals[0].geturl()
+        postsock = 'POST %s HTTP/1.1\r\n' % sockvals[0].geturl()
         if args != None:
             postdata = urllib.urlencode(args)
             postsock += ('Content-Length: ' + str(len(postdata)) + '\n\n' + [postdata])
@@ -110,7 +110,7 @@ class HTTPClient(object):
         data = self.recvall(sock)
         code = self.get_code(data)
         body = self.get_body(data)
-        return HTTPResponse(code, body)
+        return HTTPRequest(code, body)
 
     def command(self, url, command="GET", args=None):
         if (command == "POST"):
@@ -121,6 +121,8 @@ class HTTPClient(object):
 if __name__ == "__main__":
     client = HTTPClient()
     command = "GET"
+    # is this printing the response to stdout?
+    print("is this my response print? " + HTTPRequest(code,body))
     if (len(sys.argv) <= 1):
         help()
         sys.exit(1)
